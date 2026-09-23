@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberTech Academy | Cursos do Futuro no Presente</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Orbitron, Press Start 2P e Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ink-black': '#0b2027',
+                        'cerulean': '#40798c',
+                        'pacific-cyan': '#589197',
+                        'tropical-teal': '#70a9a1',
+                        'ash-grey': '#a0c0b4',
+                        'ash-grey-2': '#cfd7c7',
+                        'cornsilk': '#f6f1d1',
+                    },
+                    fontFamily: {
+                        'orbitron': ['Orbitron', 'sans-serif'],
+                        'retro': ['"Press Start 2P"', 'monospace'],
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --ink-black: #0b2027;
+            --cerulean: #40798c;
+            --pacific-cyan: #589197;
+            --tropical-teal: #70a9a1;
+            --ash-grey: #a0c0b4;
+            --ash-grey-2: #cfd7c7;
+            --cornsilk: #f6f1d1;
+        }
+
+        body {
+            background-color: var(--ink-black);
+            color: var(--cornsilk);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Scanline Overlay Effect */
+        .scanline-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 3px, 6px 100%;
+            z-index: 99;
+            opacity: 0.6;
+        }
+
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(11, 32, 39, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(112, 169, 161, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-card {
+            background: rgba(64, 121, 140, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(160, 192, 180, 0.2);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--cornsilk);
+            box-shadow: 0 0 20px rgba(112, 169, 161, 0.4), 0 0 10px rgba(246, 241, 209, 0.2);
+        }
+
+        /* Glowing text & borders */
+        .glow-text {
+            text-shadow: 0 0 10px rgba(246, 241, 209, 0.7), 0 0 20px rgba(112, 169, 161, 0.5);
+        }
+
+        .glow-teal {
+            text-shadow: 0 0 10px rgba(112, 169, 161, 0.8);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 15px rgba(112, 169, 161, 0.3);
+            border: 1px solid var(--tropical-teal);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--ink-black);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--cerulean);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--tropical-teal);
+        }
+
+        /* Glitch Animation Keyframes */
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+
+        .glitch-hover:hover {
+            animation: glitch 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+        }
+
+        dialog::backdrop {
+            background: rgba(11, 32, 39, 0.85);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-tropical-teal selection:text-ink-black">
+
+    <!-- 3D Canvas Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Retro CRT Scanline Overlay -->
+    <div id="scanline" class="scanline-overlay"></div>
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-tropical-teal/30 px-4 py-3 md:px-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-lg bg-cerulean/50 flex items-center justify-center border border-tropical-teal group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-microchip text-cornsilk text-xl group-hover:rotate-12 transition-transform"></i>
+                </div>
+                <div>
+                    <span class="font-orbitron font-extrabold text-xl md:text-2xl tracking-wider text-cornsilk glow-text block leading-none">
+                        CYBER<span class="text-tropical-teal">TECH</span>
+                    </span>
+                    <span class="font-retro text-[9px] text-ash-grey tracking-widest uppercase">Escola do Futuro</span>
+                </div>
+            </a>
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center space-x-6 font-orbitron text-sm">
+                <a href="#cursos" class="hover:text-tropical-teal transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-code text-xs text-pacific-cyan"></i> Cursos
+                </a>
+                <a href="#simulador" class="hover:text-tropical-teal transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad text-xs text-pacific-cyan"></i> Trilha Ideal
+                </a>
+                <a href="#sobre" class="hover:text-tropical-teal transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-xs text-pacific-cyan"></i> Sobre Nós
+                </a>
+                <button onclick="openContactModal()" class="hover:text-tropical-teal transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-envelope text-xs text-pacific-cyan"></i> Contato
+                </button>
+            </nav>
+
+            <!-- Action Controls & Cart Button -->
+            <div class="flex items-center gap-3">
+                <!-- Toggle Scanlines Effect -->
+                <button id="toggle-scanline" title="Alternar Efeito CRT" class="p-2 rounded-lg bg-cerulean/30 border border-tropical-teal/40 hover:bg-tropical-teal/20 text-ash-grey hover:text-cornsilk transition-all">
+                    <i class="fa-solid fa-tv text-sm"></i>
+                </button>
+
+                <!-- Cart / Enrolled Trigger -->
+                <button onclick="toggleCartDrawer()" class="relative p-2.5 rounded-lg bg-tropical-teal/20 border border-tropical-teal text-cornsilk hover:bg-tropical-teal/40 transition-all flex items-center gap-2 font-orbitron text-sm">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="hidden sm:inline font-semibold">Plano</span>
+                    <span id="cart-badge" class="px-2 py-0.5 text-xs font-bold rounded-full bg-cornsilk text-ink-black">0</span>
+                </button>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg bg-cerulean/30 border border-tropical-teal/40 text-cornsilk">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden mt-3 pt-3 border-t border-tropical-teal/20 flex flex-col space-y-3 font-orbitron text-sm">
+            <a href="#cursos" onclick="toggleMobileMenu()" class="hover:text-tropical-teal py-1">⚡ Cursos</a>
+            <a href="#simulador" onclick="toggleMobileMenu()" class="hover:text-tropical-teal py-1">🎮 Trilha Ideal</a>
+            <a href="#sobre" onclick="toggleMobileMenu()" class="hover:text-tropical-teal py-1">💻 Sobre Nós</a>
+            <button onclick="toggleMobileMenu(); openContactModal()" class="text-left hover:text-tropical-teal py-1">📡 Fale Conosco</button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 md:px-8 py-8 space-y-16">
+        
+        <!-- Hero Section -->
+        <section class="relative rounded-3xl glass-panel p-6 sm:p-10 md:p-14 overflow-hidden border border-tropical-teal/40 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="space-y-6 max-w-2xl z-10">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tropical-teal/20 border border-tropical-teal text-ash-grey-2 text-xs font-retro">
+                    <span class="w-2 h-2 rounded-full bg-cornsilk animate-ping"></span>
+                    Matrículas Abertas 2026
+                </div>
+                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-orbitron font-black text-cornsilk leading-tight glow-text">
+                    APRENDA A <span class="text-tropical-teal underline decoration-cerulean">PROGRAMAR</span> O AMANHÃ.
+                </h1>
+                <p class="text-ash-grey text-base sm:text-lg leading-relaxed">
+                    Acelere o seu futuro ou o do seu filho com cursos práticos de programação, IA e banco de dados. Ambiente estilo retro-futurista com metodologia mão na massa.
+                </p>
+                <div class="flex flex-wrap gap-4 justify-center md:justify-start pt-2">
+                    <a href="#cursos" class="px-6 py-3.5 rounded-xl bg-tropical-teal hover:bg-ash-grey text-ink-black font-orbitron font-extrabold text-sm tracking-wider uppercase shadow-lg shadow-tropical-teal/30 hover:scale-105 transition-all flex items-center gap-2">
+                        Ver Cursos <i class="fa-solid fa-arrow-down"></i>
+                    </a>
+                    <a href="#simulador" class="px-6 py-3.5 rounded-xl glass-card border border-cornsilk/40 hover:border-cornsilk text-cornsilk font-orbitron font-bold text-sm tracking-wider uppercase hover:bg-cerulean/30 transition-all flex items-center gap-2">
+                        Simulador de Trilha <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hero Mascot / Visual Badge -->
+            <div class="relative w-full max-w-xs md:max-w-sm flex justify-center">
+                <div class="w-64 h-64 sm:w-72 sm:h-72 rounded-full glass-card border-2 border-tropical-teal/60 flex flex-col items-center justify-center p-6 text-center shadow-2xl relative group">
+                    <div class="absolute -top-3 bg-cerulean text-cornsilk font-retro text-[10px] px-3 py-1 rounded-full border border-tropical-teal">
+                        100% PRÁTICO
+                    </div>
+                    <i class="fa-solid fa-code-merge text-6xl text-tropical-teal my-3 group-hover:scale-110 group-hover:rotate-6 transition-transform"></i>
+                    <h2 class="font-orbitron font-bold text-lg text-cornsilk">Formação Tech 360°</h2>
+                    <p class="text-xs text-ash-grey mt-1">Python • Web Fullstack • Databases</p>
+                    <div class="mt-4 px-4 py-1.5 rounded-lg bg-ink-black/60 border border-ash-grey/30 text-xs font-mono text-tropical-teal">
+                        &gt; status: matriculas_ativas
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Courses Section -->
+        <section id="cursos" class="space-y-8 scroll-mt-24">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-4xl font-orbitron font-bold text-cornsilk glow-teal flex items-center gap-3">
+                        <i class="fa-solid fa-cubes text-tropical-teal"></i> Catálogo de Cursos
+                    </h2>
+                    <p class="text-ash-grey text-sm mt-1">Selecione os módulos e monte sua formação tecnológica sob medida.</p>
+                </div>
+
+                <!-- Live Search Box -->
+                <div class="relative w-full md:w-72">
+                    <input type="text" id="course-search" placeholder="Buscar curso ou tecnologia..." 
+                           class="w-full px-4 py-2.5 pl-10 rounded-xl glass-card border border-tropical-teal/40 text-cornsilk placeholder-ash-grey/60 focus:outline-none focus:border-cornsilk text-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-ash-grey text-sm"></i>
+                </div>
+            </div>
+
+            <!-- Category Filter Buttons -->
+            <div class="flex flex-wrap gap-2 sm:gap-3 pb-2 border-b border-tropical-teal/20" id="category-filters">
+                <button data-cat="all" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-orbitron font-semibold bg-tropical-teal text-ink-black border border-tropical-teal transition-all">
+                    Todos os Cursos
+                </button>
+                <button data-cat="python" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-orbitron font-semibold bg-cerulean/30 text-cornsilk border border-tropical-teal/30 hover:border-tropical-teal transition-all">
+                    🐍 Python
+                </button>
+                <button data-cat="web" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-orbitron font-semibold bg-cerulean/30 text-cornsilk border border-tropical-teal/30 hover:border-tropical-teal transition-all">
+                    🌐 Dev Web
+                </button>
+                <button data-cat="database" class="filter-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-orbitron font-semibold bg-cerulean/30 text-cornsilk border border-tropical-teal/30 hover:border-tropical-teal transition-all">
+                    🗄️ Banco de Dados
+                </button>
+            </div>
+
+            <!-- Dynamic Course Grid -->
+            <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Course Cards will be dynamically injected via JavaScript -->
+            </div>
+        </section>
+
+        <!-- Quiz / Learning Path Simulator -->
+        <section id="simulador" class="rounded-3xl glass-panel p-6 sm:p-10 border border-tropical-teal/40 space-y-6 scroll-mt-24">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <span class="font-retro text-xs text-tropical-teal uppercase tracking-widest">[ Cyber Simulator 1.0 ]</span>
+                <h2 class="text-2xl sm:text-3xl font-orbitron font-bold text-cornsilk glow-text">
+                    Descubra Sua Trilha Ideal
+                </h2>
+                <p class="text-ash-grey text-sm">Responda a 2 perguntas rápidas para receber uma recomendação personalizada para você ou seu filho.</p>
+            </div>
+
+            <div class="max-w-2xl mx-auto space-y-6 bg-ink-black/50 p-6 rounded-2xl border border-ash-grey/20">
+                <!-- Question 1 -->
+                <div>
+                    <label class="block font-orbitron text-sm text-cornsilk mb-3">1. Qual o seu principal objetivo tecnológico?</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button type="button" onclick="selectQuizOption('goal', 'creation', this)" class="quiz-opt-goal p-3 rounded-xl border border-cerulean/50 bg-cerulean/20 text-xs font-semibold text-center hover:border-tropical-teal transition-all">
+                            🚀 Criar Sites e Apps
+                        </button>
+                        <button type="button" onclick="selectQuizOption('goal', 'automation', this)" class="quiz-opt-goal p-3 rounded-xl border border-cerulean/50 bg-cerulean/20 text-xs font-semibold text-center hover:border-tropical-teal transition-all">
+                            🤖 Automação e Inteligência
+                        </button>
+                        <button type="button" onclick="selectQuizOption('goal', 'data', this)" class="quiz-opt-goal p-3 rounded-xl border border-cerulean/50 bg-cerulean/20 text-xs font-semibold text-center hover:border-tropical-teal transition-all">
+                            📊 Gestão de Dados & Backend
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div>
+                    <label class="block font-orbitron text-sm text-cornsilk mb-3">2. Qual seu nível atual de experiência?</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button type="button" onclick="selectQuizOption('level', 'beginner', this)" class="quiz-opt-level p-3 rounded-xl border border-cerulean/50 bg-cerulean/20 text-xs font-semibold text-center hover:border-tropical-teal transition-all">
+                            🌱 Iniciante do Zero
+                        </button>
+                        <button type="button" onclick="selectQuizOption('level', 'intermediate', this)" class="quiz-opt-level p-3 rounded-xl border border-cerulean/50 bg-cerulean/20 text-xs font-semibold text-center hover:border-tropical-teal transition-all">
+                            ⚡ Já conheço lógica
+                        </button>
+                        <button type="button" onclick="selectQuizOption('level', 'advanced', this)" class="quiz-opt-level p-3 rounded-xl border border-cerulean/50 bg-cerulean/20 text-xs font-semibold text-center hover:border-tropical-teal transition-all">
+                            🔥 Busco Especialização
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center pt-2">
+                    <button onclick="calculateRecommendation()" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-tropical-teal text-ink-black font-orbitron font-extrabold text-sm uppercase hover:bg-cornsilk transition-all shadow-lg">
+                        Gerar Trilha Recomendada
+                    </button>
+                </div>
+
+                <!-- Result Box -->
+                <div id="quiz-result" class="hidden p-4 rounded-xl bg-cerulean/20 border border-tropical-teal space-y-3">
+                    <h3 class="font-orbitron font-bold text-tropical-teal text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Trilha Recomendada Encontrada:
+                    </h3>
+                    <p id="quiz-result-text" class="text-xs text-cornsilk leading-relaxed"></p>
+                    <div id="quiz-recommended-courses" class="flex flex-wrap gap-2 pt-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="sobre" class="grid grid-cols-1 md:grid-cols-3 gap-6 scroll-mt-24">
+            <div class="glass-card p-6 rounded-2xl border border-tropical-teal/30 space-y-3">
+                <div class="w-12 h-12 rounded-xl bg-tropical-teal/20 border border-tropical-teal flex items-center justify-center text-tropical-teal text-xl">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h3 class="font-orbitron font-bold text-lg text-cornsilk">Metodologia Hand-On</h3>
+                <p class="text-xs text-ash-grey leading-relaxed">
+                    Sem teoria cansativa. O aluno constrói projetos reais do primeiro ao último minuto de aula, montando um portfólio prático.
+                </p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl border border-tropical-teal/30 space-y-3">
+                <div class="w-12 h-12 rounded-xl bg-tropical-teal/20 border border-tropical-teal flex items-center justify-center text-tropical-teal text-xl">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <h3 class="font-orbitron font-bold text-lg text-cornsilk">Para Jovens e Pais</h3>
+                <p class="text-xs text-ash-grey leading-relaxed">
+                    Linguagem acessível para os estudantes e acompanhamento detalhado de evolução para os pais e responsáveis.
+                </p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl border border-tropical-teal/30 space-y-3">
+                <div class="w-12 h-12 rounded-xl bg-tropical-teal/20 border border-tropical-teal flex items-center justify-center text-tropical-teal text-xl">
+                    <i class="fa-solid fa-certificate"></i>
+                </div>
+                <h3 class="font-orbitron font-bold text-lg text-cornsilk">Certificação CyberTech</h3>
+                <p class="text-xs text-ash-grey leading-relaxed">
+                    Certificado digital validado com carga horária especificada, pronto para adicionar ao LinkedIn ou currículo.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Cart / Enrolled Workload Drawer -->
+    <aside id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 glass-panel z-50 transform translate-x-full transition-transform duration-300 border-l border-tropical-teal flex flex-col justify-between p-6">
+        <div>
+            <div class="flex items-center justify-between pb-4 border-b border-tropical-teal/30">
+                <h2 class="font-orbitron font-bold text-lg text-cornsilk flex items-center gap-2">
+                    <i class="fa-solid fa-bookmark text-tropical-teal"></i> Plano de Estudos
+                </h2>
+                <button onclick="toggleCartDrawer()" class="text-ash-grey hover:text-cornsilk p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div id="cart-items-container" class="mt-4 space-y-3 overflow-y-auto max-h-[60vh] pr-1">
+                <!-- Cart items will be rendered here -->
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-tropical-teal/30 space-y-4">
+            <div class="space-y-1 text-sm">
+                <div class="flex justify-between text-ash-grey">
+                    <span>Total de Cursos:</span>
+                    <span id="cart-count-text" class="font-semibold text-cornsilk">0</span>
+                </div>
+                <div class="flex justify-between text-base font-orbitron font-bold text-tropical-teal">
+                    <span>Carga Horária Total:</span>
+                    <span id="cart-total-hours">0h</span>
+                </div>
+            </div>
+
+            <button onclick="openCheckoutModal()" id="btn-checkout" disabled class="w-full py-3 rounded-xl bg-tropical-teal disabled:opacity-50 disabled:cursor-not-allowed text-ink-black font-orbitron font-extrabold text-sm uppercase hover:bg-cornsilk transition-all">
+                Concluir Pré-Matrícula
+            </button>
+        </div>
+    </aside>
+
+    <!-- Course Detail Dialog Modal -->
+    <dialog id="course-modal" class="rounded-2xl p-0 w-11/12 max-w-2xl glass-panel border border-tropical-teal text-cornsilk">
+        <div class="p-6 space-y-6 relative">
+            <button onclick="closeCourseModal()" class="absolute top-4 right-4 text-ash-grey hover:text-cornsilk text-lg p-2">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <span id="modal-course-badge" class="px-3 py-1 rounded-full text-xs font-retro bg-tropical-teal/20 text-tropical-teal border border-tropical-teal"></span>
+                <span id="modal-course-hours" class="text-xs font-mono text-ash-grey"></span>
+            </div>
+
+            <div>
+                <h2 id="modal-course-title" class="text-2xl font-orbitron font-bold text-cornsilk"></h2>
+                <p id="modal-course-desc" class="text-sm text-ash-grey mt-2 leading-relaxed"></p>
+            </div>
+
+            <!-- Syllabus / Modules -->
+            <div class="space-y-2">
+                <h3 class="font-orbitron text-sm font-bold text-tropical-teal uppercase tracking-wider">O que você vai aprender:</h3>
+                <ul id="modal-course-syllabus" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-ash-grey-2">
+                    <!-- Dynamic Syllabus -->
+                </ul>
+            </div>
+
+            <div class="pt-4 border-t border-tropical-teal/30 flex flex-wrap gap-3 justify-end">
+                <button onclick="closeCourseModal()" class="px-5 py-2.5 rounded-xl border border-ash-grey/40 text-ash-grey hover:text-cornsilk text-xs font-orbitron uppercase">
+                    Fechar
+                </button>
+                <button id="modal-add-btn" class="px-6 py-2.5 rounded-xl bg-tropical-teal text-ink-black font-orbitron font-extrabold text-xs uppercase hover:bg-cornsilk transition-all">
+                    Adicionar ao Plano
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Contact & Pre-Enrollment Modal -->
+    <dialog id="contact-modal" class="rounded-2xl p-0 w-11/12 max-w-lg glass-panel border border-tropical-teal text-cornsilk">
+        <div class="p-6 space-y-4 relative">
+            <button onclick="closeContactModal()" class="absolute top-4 right-4 text-ash-grey hover:text-cornsilk text-lg p-2">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h2 class="text-xl font-orbitron font-bold text-cornsilk flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane text-tropical-teal"></i> Formulário de Pré-Matrícula
+            </h2>
+            <p class="text-xs text-ash-grey">Preencha os dados abaixo. Nossa equipe entrará em contato via WhatsApp para confirmar a vaga.</p>
+
+            <form id="enrollment-form" onsubmit="handleEnrollmentSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-orbitron text-ash-grey mb-1">Nome do Aluno / Responsável</label>
+                    <input type="text" required placeholder="Ex: Alex Silva" 
+                           class="w-full px-3.5 py-2 rounded-xl bg-ink-black/60 border border-tropical-teal/40 text-cornsilk placeholder-ash-grey/50 text-sm focus:outline-none focus:border-cornsilk">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-orbitron text-ash-grey mb-1">E-mail de Contato</label>
+                    <input type="email" required placeholder="exemplo@email.com" 
+                           class="w-full px-3.5 py-2 rounded-xl bg-ink-black/60 border border-tropical-teal/40 text-cornsilk placeholder-ash-grey/50 text-sm focus:outline-none focus:border-cornsilk">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-orbitron text-ash-grey mb-1">WhatsApp / Telefone</label>
+                    <input type="tel" required placeholder="(11) 99999-9999" 
+                           class="w-full px-3.5 py-2 rounded-xl bg-ink-black/60 border border-tropical-teal/40 text-cornsilk placeholder-ash-grey/50 text-sm focus:outline-none focus:border-cornsilk">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-orbitron text-ash-grey mb-1">Perfil do Aluno</label>
+                    <select class="w-full px-3.5 py-2 rounded-xl bg-ink-black border border-tropical-teal/40 text-cornsilk text-sm focus:outline-none">
+                        <option value="student">Estudante / Jovem</option>
+                        <option value="parent">Pai / Mãe / Responsável</option>
+                        <option value="other">Outro</option>
+                    </select>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" onclick="closeContactModal()" class="px-4 py-2 rounded-xl border border-ash-grey/40 text-ash-grey text-xs font-orbitron">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-6 py-2 rounded-xl bg-tropical-teal text-ink-black font-orbitron font-extrabold text-xs uppercase hover:bg-cornsilk transition-all">
+                        Enviar Inscrição
+                    </button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden px-5 py-3 rounded-xl glass-panel border border-tropical-teal text-cornsilk text-sm font-orbitron flex items-center gap-3 shadow-2xl">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-tropical-teal"></i>
+        <span id="toast-msg">Mensagem enviada!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-tropical-teal/30 glass-panel mt-16 py-8 px-4 sm:px-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="text-center md:text-left space-y-1">
+                <span class="font-orbitron font-extrabold text-lg text-cornsilk tracking-wider">
+                    CYBER<span class="text-tropical-teal">TECH</span> ACADEMY
+                </span>
+                <p class="text-xs text-ash-grey">Transformando entusiastas em desenvolvedores prontos para o futuro.</p>
+            </div>
+
+            <div class="flex items-center gap-4 text-ash-grey text-lg">
+                <a href="#" class="hover:text-tropical-teal transition-colors"><i class="fa-brands fa-github"></i></a>
+                <a href="#" class="hover:text-tropical-teal transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" class="hover:text-tropical-teal transition-colors"><i class="fa-brands fa-discord"></i></a>
+                <a href="#" class="hover:text-tropical-teal transition-colors"><i class="fa-brands fa-youtube"></i></a>
+            </div>
+
+            <div class="text-xs text-ash-grey/60 font-mono text-center md:text-right">
+                © 2026 CyberTech. Todos os direitos reservados.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* ----------------------------------------------------
+           1. COURSE DATA STORE
+        ---------------------------------------------------- */
+        const coursesData = [
+            {
+                id: 'py1',
+                title: 'Programação em Python 1',
+                category: 'python',
+                hours: 40,
+                badge: 'Iniciante',
+                icon: 'fa-brands fa-python',
+                description: 'Aprenda os fundamentos de programação, estrutura de código e lógica computacional com a linguagem mais versátil do mercado.',
+                syllabus: [
+                    'Sintaxe Básica e Variáveis',
+                    'Estruturas Condicionais (if/else)',
+                    'Laços de Repetição (for/while)',
+                    'Funções e Módulos Iniciais',
+                    'Projetos Práticos e Jogos no Terminal'
+                ]
+            },
+            {
+                id: 'py2',
+                title: 'Programação em Python 2',
+                category: 'python',
+                hours: 40,
+                badge: 'Intermediário',
+                icon: 'fa-brands fa-python',
+                description: 'Aprofunde-se em Orientação a Objetos, manipulando estruturas de dados complexas e automação de tarefas cotidianas.',
+                syllabus: [
+                    'Programação Orientada a Objetos (POO)',
+                    'Manipulação de Arquivos e JSON',
+                    'Tratamento de Exceções',
+                    'Automação com Scripts Python',
+                    'APIs e Consumo de Dados Web'
+                ]
+            },
+            {
+                id: 'py3',
+                title: 'Programação em Python 3',
+                category: 'python',
+                hours: 60,
+                badge: 'Avançado',
+                icon: 'fa-brands fa-python',
+                description: 'Domine análise de dados, criação de APIs REST robustas e integração com modelos modernos de Inteligência Artificial.',
+                syllabus: [
+                    'Análise de Dados com Pandas & NumPy',
+                    'Criação de APIs com FastAPI',
+                    'Automação de Web Scraping',
+                    'Integração com LLMs e IAs',
+                    'Projeto Integrador Final'
+                ]
+            },
+            {
+                id: 'web1',
+                title: 'Desenvolvimento Web com HTML, CSS e JS',
+                category: 'web',
+                hours: 60,
+                badge: 'Essencial',
+                icon: 'fa-brands fa-html5',
+                description: 'Construa sites modernos, responsivos e interativos do zero utilizando as tecnologias fundamentais da web.',
+                syllabus: [
+                    'HTML5 Semântico e Acessibilidade',
+                    'CSS3 Avançado, Flexbox e Grid',
+                    'Animações e Efeitos Visuais',
+                    'JavaScript DOM e Eventos',
+                    'Publicação de Sites no GitHub e Netlify'
+                ]
+            },
+            {
+                id: 'web2',
+                title: 'Desenvolvimento Web com React',
+                category: 'web',
+                hours: 40,
+                badge: 'Front-end SPA',
+                icon: 'fa-brands fa-react',
+                description: 'Crie aplicações web de página única (SPA) com a biblioteca front-end mais requisitada pelas empresas de tecnologia.',
+                syllabus: [
+                    'Componentes e Props em JSX',
+                    'Gerenciamento de Estado (useState, useEffect)',
+                    'Consumo de APIs Assíncronas',
+                    'Roteamento e Navegação',
+                    'Tailwind CSS com React'
+                ]
+            },
+            {
+                id: 'web3',
+                title: 'Desenvolvimento Web com Flask e Django',
+                category: 'web',
+                hours: 80,
+                badge: 'Fullstack Back-end',
+                icon: 'fa-solid fa-server',
+                description: 'Desenvolva sistemas web robustos e seguros no back-end com os dois maiores frameworks Python do mercado.',
+                syllabus: [
+                    'Arquitetura MVT / MVC',
+                    'Rotas e Controllers no Flask',
+                    'Django Admin e ORM Completo',
+                    'Autenticação e Segurança',
+                    'Deploy de Aplicação em Nuvem'
+                ]
+            },
+            {
+                id: 'db1',
+                title: 'Banco de Dados SQLite3',
+                category: 'database',
+                hours: 20,
+                badge: 'Dados Essencial',
+                icon: 'fa-solid fa-database',
+                description: 'Aprenda comandos SQL nativos e armezenamento local leve ideal para softwares desktop e aplicativos mobile.',
+                syllabus: [
+                    'Modelagem de Dados Relacional',
+                    'Comandos DDL e DML (SELECT, INSERT, UPDATE)',
+                    'Relacionamentos e Chaves Primárias',
+                    'Integração Nativa com Python'
+                ]
+            },
+            {
+                id: 'db2',
+                title: 'Banco de Dados Realtime Database',
+                category: 'database',
+                hours: 20,
+                badge: 'NoSQL / Firebase',
+                icon: 'fa-solid fa-bolt',
+                description: 'Explore bancos NoSQL em tempo real com Firebase para construir chats, jogos multiplayer e apps instantâneos.',
+                syllabus: [
+                    'Estrutura em Árvore JSON NoSQL',
+                    'Sincronização em Tempo Real',
+                    'Regras de Segurança e Acesso',
+                    'Integração com Web e Apps'
+                ]
+            },
+            {
+                id: 'db3',
+                title: 'Banco de Dados PostgreSQL',
+                category: 'database',
+                hours: 40,
+                badge: 'Corporativo',
+                icon: 'fa-solid fa-network-wired',
+                description: 'Domine um dos bancos relacionais mais poderosos do mundo, utilizado por grandes startups e corporações.',
+                syllabus: [
+                    'Queries Complexas e JOINs Avançados',
+                    'Indexação e Performance',
+                    'Procedures, Triggers e Views',
+                    'Modelagem para Ambientes de Alta Escala'
+                ]
+            }
+        ];
+
+        // State Store
+        let enrolledCourses = [];
+        let currentQuizSelection = { goal: null, level: null };
+
+        /* ----------------------------------------------------
+           2. RENDER COURSES & FILTERS
+        ---------------------------------------------------- */
+        function renderCourses(coursesToRender = coursesData) {
+            const grid = document.getElementById('courses-grid');
+            grid.innerHTML = '';
+
+            if(coursesToRender.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 glass-card rounded-2xl">
+                        <i class="fa-solid fa-filter-circle-xmark text-4xl text-tropical-teal mb-3"></i>
+                        <p class="text-cornsilk font-orbitron">Nenhum curso encontrado com estes critérios.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            coursesToRender.forEach(course => {
+                const isEnrolled = enrolledCourses.some(c => c.id === course.id);
+                const card = document.createElement('article');
+                card.className = 'glass-card rounded-2xl p-6 flex flex-col justify-between border border-tropical-teal/30 hover:border-tropical-teal transition-all group';
+                
+                card.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-retro bg-tropical-teal/20 text-tropical-teal border border-tropical-teal/40 uppercase">
+                                ${course.badge}
+                            </span>
+                            <span class="text-xs font-mono text-ash-grey flex items-center gap-1">
+                                <i class="fa-regular fa-clock text-tropical-teal"></i> ${course.hours}h
+                            </span>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="p-3 rounded-xl bg-cerulean/30 border border-tropical-teal/30 text-tropical-teal text-xl group-hover:scale-110 transition-transform">
+                                <i class="${course.icon}"></i>
+                            </div>
+                            <h3 class="font-orbitron font-bold text-lg text-cornsilk group-hover:text-tropical-teal transition-colors leading-snug">
+                                ${course.title}
+                            </h3>
+                        </div>
+
+                        <p class="text-xs text-ash-grey leading-relaxed line-clamp-3">
+                            ${course.description}
+                        </p>
+                    </div>
+
+                    <div class="pt-6 mt-4 border-t border-tropical-teal/20 flex items-center gap-2">
+                        <button onclick="openCourseModal('${course.id}')" class="flex-1 py-2.5 rounded-xl border border-tropical-teal/40 hover:border-tropical-teal text-cornsilk text-xs font-orbitron font-semibold transition-all">
+                            Detalhes
+                        </button>
+                        <button onclick="toggleEnrollCourse('${course.id}')" class="px-4 py-2.5 rounded-xl ${isEnrolled ? 'bg-ash-grey text-ink-black' : 'bg-tropical-teal text-ink-black'} hover:bg-cornsilk text-xs font-orbitron font-bold transition-all flex items-center gap-1">
+                            <i class="fa-solid ${isEnrolled ? 'fa-check' : 'fa-plus'}"></i> ${isEnrolled ? 'Adicionado' : 'Adicionar'}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Search Filter Event
+        document.getElementById('course-search').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = coursesData.filter(c => 
+                c.title.toLowerCase().includes(query) || 
+                c.description.toLowerCase().includes(query)
+            );
+            renderCourses(filtered);
+        });
+
+        // Category Filter Event
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('bg-tropical-teal', 'text-ink-black');
+                    b.classList.add('bg-cerulean/30', 'text-cornsilk');
+                });
+                btn.classList.remove('bg-cerulean/30', 'text-cornsilk');
+                btn.classList.add('bg-tropical-teal', 'text-ink-black');
+
+                const cat = btn.dataset.cat;
+                if(cat === 'all') {
+                    renderCourses(coursesData);
+                } else {
+                    renderCourses(coursesData.filter(c => c.category === cat));
+                }
+            });
+        });
+
+        /* ----------------------------------------------------
+           3. CART / WORKLOAD CALCULATOR DRAWER
+        ---------------------------------------------------- */
+        function toggleCartDrawer() {
+            const drawer = document.getElementById('cart-drawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        function toggleEnrollCourse(courseId) {
+            const index = enrolledCourses.findIndex(c => c.id === courseId);
+            const course = coursesData.find(c => c.id === courseId);
+
+            if(index >= 0) {
+                enrolledCourses.splice(index, 1);
+                showToast(`Removido: ${course.title}`);
+            } else {
+                enrolledCourses.push(course);
+                showToast(`Adicionado: ${course.title}`);
+            }
+
+            updateCartUI();
+            renderCourses();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items-container');
+            const badge = document.getElementById('cart-badge');
+            const totalHoursEl = document.getElementById('cart-total-hours');
+            const countTextEl = document.getElementById('cart-count-text');
+            const btnCheckout = document.getElementById('btn-checkout');
+
+            badge.innerText = enrolledCourses.length;
+            countTextEl.innerText = enrolledCourses.length;
+
+            const totalHours = enrolledCourses.reduce((sum, c) => sum + c.hours, 0);
+            totalHoursEl.innerText = `${totalHours}h`;
+
+            btnCheckout.disabled = enrolledCourses.length === 0;
+
+            if(enrolledCourses.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-ash-grey text-xs">
+                        <i class="fa-solid fa-folder-open text-2xl mb-2 text-tropical-teal/50"></i>
+                        <p>Nenhum curso selecionado ainda.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            enrolledCourses.forEach(course => {
+                const item = document.createElement('div');
+                item.className = 'p-3 rounded-xl bg-ink-black/50 border border-tropical-teal/30 flex items-center justify-between gap-2';
+                item.innerHTML = `
+                    <div>
+                        <h4 class="text-xs font-orbitron font-bold text-cornsilk">${course.title}</h4>
+                        <span class="text-[10px] text-tropical-teal font-mono">${course.hours} horas</span>
+                    </div>
+                    <button onclick="toggleEnrollCourse('${course.id}')" class="text-ash-grey hover:text-red-400 p-1">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        /* ----------------------------------------------------
+           4. MODAL HANDLERS
+        ---------------------------------------------------- */
+        function openCourseModal(courseId) {
+            const course = coursesData.find(c => c.id === courseId);
+            const dialog = document.getElementById('course-modal');
+            const isEnrolled = enrolledCourses.some(c => c.id === course.id);
+
+            document.getElementById('modal-course-badge').innerText = course.badge;
+            document.getElementById('modal-course-hours').innerText = `${course.hours} Horas de Aulas Práticas`;
+            document.getElementById('modal-course-title').innerText = course.title;
+            document.getElementById('modal-course-desc').innerText = course.description;
+
+            const syllabusList = document.getElementById('modal-course-syllabus');
+            syllabusList.innerHTML = course.syllabus.map(item => `
+                <li class="flex items-center gap-2">
+                    <i class="fa-solid fa-chevron-right text-[10px] text-tropical-teal"></i> ${item}
+                </li>
+            `).join('');
+
+            const addBtn = document.getElementById('modal-add-btn');
+            addBtn.innerText = isEnrolled ? 'Remover do Plano' : 'Adicionar ao Plano';
+            addBtn.onclick = () => {
+                toggleEnrollCourse(course.id);
+                closeCourseModal();
+            };
+
+            dialog.showModal();
+        }
+
+        function closeCourseModal() {
+            document.getElementById('course-modal').close();
+        }
+
+        function openContactModal() {
+            document.getElementById('contact-modal').showModal();
+        }
+
+        function closeContactModal() {
+            document.getElementById('contact-modal').close();
+        }
+
+        function openCheckoutModal() {
+            toggleCartDrawer();
+            openContactModal();
+        }
+
+        function handleEnrollmentSubmit(e) {
+            e.preventDefault();
+            closeContactModal();
+            showToast('Pré-Inscrição enviada com sucesso!');
+        }
+
+        /* ----------------------------------------------------
+           5. SIMULATOR QUIZ LOGIC
+        ---------------------------------------------------- */
+        function selectQuizOption(type, value, btn) {
+            currentQuizSelection[type] = value;
+            const buttons = document.querySelectorAll(`.quiz-opt-${type}`);
+            buttons.forEach(b => {
+                b.classList.remove('border-tropical-teal', 'bg-tropical-teal/30', 'text-cornsilk');
+                b.classList.add('border-cerulean/50', 'bg-cerulean/20');
+            });
+            btn.classList.remove('border-cerulean/50', 'bg-cerulean/20');
+            btn.classList.add('border-tropical-teal', 'bg-tropical-teal/30', 'text-cornsilk');
+        }
+
+        function calculateRecommendation() {
+            const { goal, level } = currentQuizSelection;
+            const resultBox = document.getElementById('quiz-result');
+            const resultText = document.getElementById('quiz-result-text');
+            const recContainer = document.getElementById('quiz-recommended-courses');
+
+            if(!goal || !level) {
+                showToast('Selecione ambas as respostas do quiz.');
+                return;
+            }
+
+            let recommendedIds = [];
+            let expText = '';
+
+            if(goal === 'creation') {
+                recommendedIds = ['web1', 'web2'];
+                expText = 'Foco em criação de interfaces interativas e aplicações web modernas.';
+            } else if(goal === 'automation') {
+                recommendedIds = ['py1', 'py2'];
+                expText = 'Excelente para construir scripts inteligentes, automação e raciocínio lógico.';
+            } else {
+                recommendedIds = ['py1', 'db1', 'web3'];
+                expText = 'Combinação perfeita de gerenciamento de dados e servidores no back-end.';
+            }
+
+            resultText.innerText = expText;
+            recContainer.innerHTML = '';
+
+            recommendedIds.forEach(id => {
+                const c = coursesData.find(course => course.id === id);
+                if(c) {
+                    const tag = document.createElement('span');
+                    tag.className = 'px-3 py-1 rounded-lg bg-tropical-teal text-ink-black text-xs font-orbitron font-bold flex items-center gap-1 cursor-pointer hover:bg-cornsilk';
+                    tag.innerText = `+ ${c.title}`;
+                    tag.onclick = () => toggleEnrollCourse(c.id);
+                    recContainer.appendChild(tag);
+                }
+            });
+
+            resultBox.classList.remove('hidden');
+        }
+
+        /* ----------------------------------------------------
+           6. UTILS & TOAST
+        ---------------------------------------------------- */
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+        document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
+
+        // CRT Scanline Toggle Button
+        document.getElementById('toggle-scanline').addEventListener('click', () => {
+            const scanline = document.getElementById('scanline');
+            scanline.style.display = scanline.style.display === 'none' ? 'block' : 'none';
+        });
+
+        /* ----------------------------------------------------
+           7. THREE.JS RETRO CYBERPUNK BACKGROUND
+        ---------------------------------------------------- */
+        window.onload = function() {
+            renderCourses();
+
+            // Setup ThreeJS Scene
+            const canvas = document.getElementById('bg-canvas');
+            const scene = new THREE.Scene();
+            
+            // Fog for retro horizon blur
+            scene.fog = new THREE.FogExp2(0x0b2027, 0.025);
+
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 3, 12);
+
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Wireframe Grid Terrain
+            const gridHelper = new THREE.GridHelper(100, 60, 0x70a9a1, 0x40798c);
+            gridHelper.position.y = -2;
+            scene.add(gridHelper);
+
+            // Floating Geometric Shapes (Icosahedrons & Octahedrons)
+            const shapes = [];
+            const geometries = [new THREE.IcosahedronGeometry(0.8, 0), new THREE.OctahedronGeometry(0.7, 0)];
+            const material = new THREE.MeshBasicMaterial({ 
+                color: 0x70a9a1, 
+                wireframe: true 
+            });
+
+            for(let i = 0; i < 25; i++) {
+                const mesh = new THREE.Mesh(geometries[i % 2], material);
+                mesh.position.x = (Math.random() - 0.5) * 40;
+                mesh.position.y = Math.random() * 15 - 2;
+                mesh.position.z = (Math.random() - 0.5) * 40;
+                mesh.rotation.x = Math.random() * Math.PI;
+                mesh.rotation.y = Math.random() * Math.PI;
+                scene.add(mesh);
+                shapes.push({
+                    mesh,
+                    rotSpeedX: (Math.random() - 0.5) * 0.02,
+                    rotSpeedY: (Math.random() - 0.5) * 0.02
+                });
+            }
+
+            // Interactive Mouse Movement
+            let mouseX = 0;
+            let mouseY = 0;
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+                mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+            });
+
+            // Touch events for mobile interactivity
+            document.addEventListener('touchmove', (e) => {
+                if(e.touches.length > 0) {
+                    mouseX = (e.touches[0].clientX / window.innerWidth - 0.5) * 2;
+                    mouseY = (e.touches[0].clientY / window.innerHeight - 0.5) * 2;
+                }
+            });
+
+            // Window Resize Handler
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Render Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Rotate Wireframe Grid forward for motion
+                gridHelper.position.z = (gridHelper.position.z + 0.05) % 1.66;
+
+                // Animate floating shapes
+                shapes.forEach(item => {
+                    item.mesh.rotation.x += item.rotSpeedX;
+                    item.mesh.rotation.y += item.rotSpeedY;
+                });
+
+                // Smooth Camera Parallax Effect based on Mouse
+                camera.position.x += (mouseX * 2 - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY * 1.5 + 3 - camera.position.y) * 0.05;
+                camera.lookAt(0, 1, 0);
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        };
+    </script>
+</body>
+</html>
